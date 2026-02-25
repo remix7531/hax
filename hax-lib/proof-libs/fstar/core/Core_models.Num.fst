@@ -79,14 +79,14 @@ let impl_u8__pow (x: u8) (exp: u32) : u8 = Rust_primitives.Arithmetic.pow_u8 x e
 
 let impl_u8__count_ones (x: u8) : u32 = Rust_primitives.Arithmetic.count_ones_u8 x
 
-assume
-val impl_u8__rotate_right': x: u8 -> n: u32 -> u8
+let impl_u8__rotate_right' (x: u8) (n: u32) : u8 =
+  Rust_primitives.Arithmetic.rotate_right_u8 x n
 
 unfold
 let impl_u8__rotate_right = impl_u8__rotate_right'
 
-assume
-val impl_u8__rotate_left': x: u8 -> n: u32 -> u8
+let impl_u8__rotate_left' (x: u8) (n: u32) : u8 =
+  Rust_primitives.Arithmetic.rotate_left_u8 x n
 
 unfold
 let impl_u8__rotate_left = impl_u8__rotate_left'
@@ -213,14 +213,14 @@ let impl_u16__pow (x: u16) (exp: u32) : u16 = Rust_primitives.Arithmetic.pow_u16
 
 let impl_u16__count_ones (x: u16) : u32 = Rust_primitives.Arithmetic.count_ones_u16 x
 
-assume
-val impl_u16__rotate_right': x: u16 -> n: u32 -> u16
+let impl_u16__rotate_right' (x: u16) (n: u32) : u16 =
+  Rust_primitives.Arithmetic.rotate_right_u16 x n
 
 unfold
 let impl_u16__rotate_right = impl_u16__rotate_right'
 
-assume
-val impl_u16__rotate_left': x: u16 -> n: u32 -> u16
+let impl_u16__rotate_left' (x: u16) (n: u32) : u16 =
+  Rust_primitives.Arithmetic.rotate_left_u16 x n
 
 unfold
 let impl_u16__rotate_left = impl_u16__rotate_left'
@@ -348,14 +348,14 @@ let impl_u32__pow (x exp: u32) : u32 = Rust_primitives.Arithmetic.pow_u32 x exp
 
 let impl_u32__count_ones (x: u32) : u32 = Rust_primitives.Arithmetic.count_ones_u32 x
 
-assume
-val impl_u32__rotate_right': x: u32 -> n: u32 -> u32
+let impl_u32__rotate_right' (x: u32) (n: u32) : u32 =
+  Rust_primitives.Arithmetic.rotate_right_u32 x n
 
 unfold
 let impl_u32__rotate_right = impl_u32__rotate_right'
 
-assume
-val impl_u32__rotate_left': x: u32 -> n: u32 -> u32
+let impl_u32__rotate_left' (x: u32) (n: u32) : u32 =
+  Rust_primitives.Arithmetic.rotate_left_u32 x n
 
 unfold
 let impl_u32__rotate_left = impl_u32__rotate_left'
@@ -483,14 +483,14 @@ let impl_u64__pow (x: u64) (exp: u32) : u64 = Rust_primitives.Arithmetic.pow_u64
 
 let impl_u64__count_ones (x: u64) : u32 = Rust_primitives.Arithmetic.count_ones_u64 x
 
-assume
-val impl_u64__rotate_right': x: u64 -> n: u32 -> u64
+let impl_u64__rotate_right' (x: u64) (n: u32) : u64 =
+  Rust_primitives.Arithmetic.rotate_right_u64 x n
 
 unfold
 let impl_u64__rotate_right = impl_u64__rotate_right'
 
-assume
-val impl_u64__rotate_left': x: u64 -> n: u32 -> u64
+let impl_u64__rotate_left' (x: u64) (n: u32) : u64 =
+  Rust_primitives.Arithmetic.rotate_left_u64 x n
 
 unfold
 let impl_u64__rotate_left = impl_u64__rotate_left'
@@ -621,14 +621,14 @@ let impl_u128__pow (x: u128) (exp: u32) : u128 = Rust_primitives.Arithmetic.pow_
 
 let impl_u128__count_ones (x: u128) : u32 = Rust_primitives.Arithmetic.count_ones_u128 x
 
-assume
-val impl_u128__rotate_right': x: u128 -> n: u32 -> u128
+let impl_u128__rotate_right' (x: u128) (n: u32) : u128 =
+  Rust_primitives.Arithmetic.rotate_right_u128 x n
 
 unfold
 let impl_u128__rotate_right = impl_u128__rotate_right'
 
-assume
-val impl_u128__rotate_left': x: u128 -> n: u32 -> u128
+let impl_u128__rotate_left' (x: u128) (n: u32) : u128 =
+  Rust_primitives.Arithmetic.rotate_left_u128 x n
 
 unfold
 let impl_u128__rotate_left = impl_u128__rotate_left'
@@ -762,14 +762,14 @@ let impl_usize__pow (x: usize) (exp: u32) : usize = Rust_primitives.Arithmetic.p
 
 let impl_usize__count_ones (x: usize) : u32 = Rust_primitives.Arithmetic.count_ones_usize x
 
-assume
-val impl_usize__rotate_right': x: usize -> n: u32 -> usize
+let impl_usize__rotate_right' (x: usize) (n: u32) : usize =
+  Rust_primitives.Arithmetic.rotate_right_usize x n
 
 unfold
 let impl_usize__rotate_right = impl_usize__rotate_right'
 
-assume
-val impl_usize__rotate_left': x: usize -> n: u32 -> usize
+let impl_usize__rotate_left' (x: usize) (n: u32) : usize =
+  Rust_primitives.Arithmetic.rotate_left_usize x n
 
 unfold
 let impl_usize__rotate_left = impl_usize__rotate_left'
