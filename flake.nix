@@ -7,7 +7,7 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    fstar.url = "github:FStarLang/FStar/v2025.10.06";
+    fstar.url = "github:FStarLang/FStar/b829d21f1d68051caeff664f515d17bdb84ad203";
     hacl-star = {
       url = "github:hacl-star/hacl-star";
       flake = false;

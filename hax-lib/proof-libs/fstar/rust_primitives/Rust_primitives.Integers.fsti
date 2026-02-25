@@ -251,9 +251,11 @@ let gte (#t:inttype) (a:int_t t) (b:int_t t) = v a >= v b
 
 
 /// Bitwise Operations
-
-/// Todo: define bitvector-based normalizable definitions
-///       for all these operations
+///
+/// Unsigned types use FStar.UInt and signed types use FStar.Int.
+/// Both internally use bitvector representations (FStar.BitVector).
+/// For shift operations on signed types, FStar.Int.shift_left/shift_right
+/// require non-negative values, so we use FStar.UInt via int_t_to_uint/uint_to_int_t.
 
 let ones (#t:inttype) : n:int_t t =
   if unsigned t then mk_int #t (pow2 (bits t) - 1)
@@ -262,7 +264,33 @@ let ones (#t:inttype) : n:int_t t =
 let zero (#t:inttype) : n:int_t t =
   mk_int #t 0
 
-val lognot: #t:inttype -> int_t t -> int_t t
+/// Convert an `int_t t` to an unsigned F* representation
+/// (two's complement for signed types)
+let int_t_to_uint (#t:inttype) (x:int_t t) : FStar.UInt.uint_t (bits t) =
+  if v x >= 0 then v x
+  else pow2 (bits t) + v x
+
+/// Convert an unsigned F* representation back to `int_t t`
+let uint_to_int_t (t:inttype) (x:FStar.UInt.uint_t (bits t)) : int_t t =
+  if unsigned t then mk_int #t x
+  else if x <= maxint t then mk_int #t x
+  else mk_int #t (x - pow2 (bits t))
+
+/// Round-trip lemma: converting to uint and back is identity
+val int_t_to_uint_to_int_t_lemma (#t:inttype) (x:int_t t)
+  : Lemma (uint_to_int_t t (int_t_to_uint x) == x)
+          [SMTPat (uint_to_int_t t (int_t_to_uint x))]
+
+/// Round-trip lemma: converting from uint and back is identity
+val uint_to_int_t_to_uint_lemma (t:inttype) (x:FStar.UInt.uint_t (bits t))
+  : Lemma (int_t_to_uint (uint_to_int_t t x) == x)
+          [SMTPat (int_t_to_uint (uint_to_int_t t x))]
+
+/// Bitwise NOT, defined via FStar.UInt.lognot / FStar.Int.lognot
+let lognot (#t:inttype) (a:int_t t) : int_t t =
+  if unsigned t then mk_int #t (FStar.UInt.lognot #(bits t) (v a))
+  else mk_int #t (FStar.Int.lognot #(bits t) (v a))
+
 val lognot_lemma: #t:inttype -> a:int_t t -> Lemma
   (lognot #t zero == ones /\
    lognot #t ones == zero /\
@@ -271,11 +299,11 @@ val lognot_lemma: #t:inttype -> a:int_t t -> Lemma
    (unsigned t ==> v (lognot a)  = pow2 (bits t) - 1 - v a)
    )
 
-val logxor: #t:inttype
-  -> int_t t
-  -> int_t t
-  -> int_t t
- 
+/// Bitwise XOR, defined via FStar.UInt.logxor / FStar.Int.logxor
+let logxor (#t:inttype) (a b:int_t t) : int_t t =
+  if unsigned t then mk_int #t (FStar.UInt.logxor #(bits t) (v a) (v b))
+  else mk_int #t (FStar.Int.logxor #(bits t) (v a) (v b))
+
 val logxor_lemma: #t:inttype -> a:int_t t -> b:int_t t -> Lemma
   (a `logxor` a == zero /\
    (a `logxor` b == zero ==> b == a) /\
@@ -286,10 +314,10 @@ val logxor_lemma: #t:inttype -> a:int_t t -> b:int_t t -> Lemma
    ones `logxor` a == lognot a /\
    a `logxor` ones == lognot a)
     
-val logand: #t:inttype
-  -> int_t t
-  -> int_t t
-  -> int_t t
+/// Bitwise AND, defined via FStar.UInt.logand / FStar.Int.logand
+let logand (#t:inttype) (a b:int_t t) : int_t t =
+  if unsigned t then mk_int #t (FStar.UInt.logand #(bits t) (v a) (v b))
+  else mk_int #t (FStar.Int.logand #(bits t) (v a) (v b))
 
 val logand_lemma: #t:inttype -> a:int_t t -> b:int_t t ->
   Lemma (logand a zero == zero /\
@@ -309,10 +337,10 @@ val logand_mask_lemma: #t:inttype
          mk_int (v a % pow2 m))
   [SMTPat (logand #t a (sub #t (mk_int #t (pow2 m)) (mk_int #t 1)))]
 
-val logor: #t:inttype
-  -> int_t t
-  -> int_t t
-  -> int_t t
+/// Bitwise OR, defined via FStar.UInt.logor / FStar.Int.logor
+let logor (#t:inttype) (a b:int_t t) : int_t t =
+  if unsigned t then mk_int #t (FStar.UInt.logor #(bits t) (v a) (v b))
+  else mk_int #t (FStar.Int.logor #(bits t) (v a) (v b))
 
 val logor_disjoint: #t:inttype -> a:int_t t -> b:int_t t -> m:nat{m < bits t} ->
   Lemma
@@ -326,50 +354,50 @@ val logor_lemma: #t:inttype -> a:int_t t -> b:int_t t ->
          logor ones a == ones /\
          ((v a >= 0 /\ v b >= 0) ==> (v (logor a b) >= v a /\ v (logor a b) >= v b)))
 
-unfold type shiftval (t:inttype) (t':inttype) =
+unfold type bitval (t:inttype) (t':inttype) =
      b:int_t t'{v b >= 0 /\ v b < bits t}
-unfold type rotval (t:inttype) (t':inttype) =
-     b:int_t t'{v b > 0 /\ v b < bits t}
 
-#push-options "--z3version 4.13.3"
-[@@"opaque_to_smt"]
+/// Shift right, defined via FStar.UInt.shift_right
+/// Note: FStar.Int.shift_right requires non-negative values,
+/// so signed types also use FStar.UInt via int_t_to_uint/uint_to_int_t.
 let shift_right (#t:inttype) (#t':inttype)
-    (a:int_t t) (b:shiftval t t') : int_t t
-    = mk_int #t (v a / pow2 (v b))
-#pop-options
+    (a:int_t t) (b:bitval t t') : int_t t =
+  uint_to_int_t t (FStar.UInt.shift_right #(bits t) (int_t_to_uint a) (v b))
 
 val shift_right_lemma (#t:inttype) (#t':inttype)
-    (a:int_t t) (b:shiftval t t'):
+    (a:int_t t) (b:bitval t t'):
     Lemma (v (shift_right #t #t' a b) == (v a / pow2 (v b)))
           [SMTPat (shift_right #t #t' a b)]
-    
-val shift_left (#t:inttype) (#t':inttype)
-    (a:int_t t) (b:shiftval t t') : int_t t
+
+/// Shift left, defined via FStar.UInt.shift_left
+/// Note: FStar.Int.shift_left requires non-negative values,
+/// so signed types also use FStar.UInt via int_t_to_uint/uint_to_int_t.
+let shift_left (#t:inttype) (#t':inttype)
+    (a:int_t t) (b:bitval t t') : int_t t =
+  uint_to_int_t t (FStar.UInt.shift_left #(bits t) (int_t_to_uint a) (v b))
 
 val shift_left_positive_lemma (#t:inttype) (#t':inttype)
-    (a:int_t t) (b:shiftval t t'):
+    (a:int_t t) (b:bitval t t'):
     Lemma (requires (unsigned t \/ v a >= 0))
           (ensures ((v (shift_left #t #t' a b) == (v a * pow2 (v b)) @%. t)))
           [SMTPat (shift_left #t #t' a b)]
 
+/// Rotate right, defined via FStar.UInt.rotate_right (unsigned types only)
+let rotate_right (#t:inttype{unsigned t}) (#t':inttype)
+    (a:int_t t) (b:bitval t t') : int_t t =
+  mk_int #t (FStar.UInt.rotate_right #(bits t) (v a) (v b))
 
-val rotate_right: #t:inttype{unsigned t} -> #t':inttype
-  -> a:int_t t
-  -> rotval t t'
-  -> int_t t
+/// Rotate left, defined via FStar.UInt.rotate_left (unsigned types only)
+let rotate_left (#t:inttype{unsigned t}) (#t':inttype)
+    (a:int_t t) (b:bitval t t') : int_t t =
+  mk_int #t (FStar.UInt.rotate_left #(bits t) (v a) (v b))
+let shift_right_i (#t:inttype) (#t':inttype) (s:bitval t t') (u:int_t t) : int_t t = shift_right u s
 
-val rotate_left: #t:inttype{unsigned t} -> #t':inttype
-  -> a:int_t t
-  -> rotval t t'
-  -> int_t t
+let shift_left_i (#t:inttype) (#t':inttype) (s:bitval t t') (u:int_t t{v u >= 0}) : int_t t = shift_left u s
 
-let shift_right_i (#t:inttype) (#t':inttype) (s:shiftval t t') (u:int_t t) : int_t t = shift_right u s
+let rotate_right_i (#t:inttype{unsigned t}) (#t':inttype) (s:bitval t t') (u:int_t t) : int_t t = rotate_right u s
 
-let shift_left_i (#t:inttype) (#t':inttype) (s:shiftval t t') (u:int_t t{v u >= 0}) : int_t t = shift_left u s
-
-let rotate_right_i (#t:inttype{unsigned t}) (#t':inttype) (s:rotval t t') (u:int_t t) : int_t t = rotate_right u s
-
-let rotate_left_i (#t:inttype{unsigned t}) (#t':inttype) (s:rotval t t') (u:int_t t) : int_t t = rotate_left u s
+let rotate_left_i (#t:inttype{unsigned t}) (#t':inttype) (s:bitval t t') (u:int_t t) : int_t t = rotate_left u s
 
 let abs_int (#t:inttype) (a:int_t t{minint t < v a}) =
     mk_int #t (abs (v a))
