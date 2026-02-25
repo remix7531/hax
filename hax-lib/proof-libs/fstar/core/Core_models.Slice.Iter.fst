@@ -33,23 +33,18 @@ let impl_2 (#v_T: Type0) : Core_models.Iter.Traits.Iterator.t_Iterator (t_Iter v
     =
     fun (self: t_Iter v_T) ->
       let (self: t_Iter v_T), (hax_temp_output: Core_models.Option.t_Option v_T) =
-        if (Rust_primitives.Sequence.seq_len #v_T self._0 <: usize) =. mk_usize 0
+        if (Rust_primitives.Sequence.seq_len #v_T (Iter?._0 self) <: usize) =. mk_usize 0
         then
           self, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_T)
           <:
           (t_Iter v_T & Core_models.Option.t_Option v_T)
         else
-          let res:v_T = Rust_primitives.Sequence.seq_first #v_T self._0 in
+          let res:v_T = Rust_primitives.Sequence.seq_first #v_T (Iter?._0 self) in
           let self:t_Iter v_T =
-            {
-              self with
-              _0
-              =
-              Rust_primitives.Sequence.seq_slice #v_T
-                self._0
+            Iter (Rust_primitives.Sequence.seq_slice #v_T
+                (Iter?._0 self)
                 (mk_usize 1)
-                (Rust_primitives.Sequence.seq_len #v_T self._0 <: usize)
-            }
+                (Rust_primitives.Sequence.seq_len #v_T (Iter?._0 self) <: usize))
             <:
             t_Iter v_T
           in
